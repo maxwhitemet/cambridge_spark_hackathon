@@ -6,25 +6,42 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay, roc_auc_score, roc_curve
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.manifold import TSNE
 import umap
+from gen_AI_functions import visualize_binary_profiles, get_optimal_threshold, print_top_positivity_profiles
 
 input_csv = "corona_tested_individuals_ver_006.csv"
 pickle_file = "models/HistGradientBoostingClassifierModel.pkl"
 
-def plot_umap(df, target, n_neighbours, min_dist, random_state=24):
-    print(f"\n=== Preparing t-SNE Projection with target {target}===")
+def plot_umap(df, target, features, n_neighbours, min_dist, random_state=24):
+    print(f"\n=== Preparing t-SNE Projection with target '{target}'===")
 
     df_clean = df.dropna().copy()
 
     X = df_clean.drop(columns=[target])
+    X= X[features].copy()
     y = df_clean[target]
+
+    pos_indices = y[y == 1].index
+    neg_indices = y[y == 0].index
+    print(f"Original distribution - Positive: {len(pos_indices)}, Negative: {len(neg_indices)}")
+    # Downsample the negative class to match the positive class size
+    np.random.seed(random_state)
+    downsampled_neg_indices = np.random.choice(neg_indices, size=len(pos_indices), replace=False)
+    # Combine balanced indices
+    balanced_indices = np.concatenate([pos_indices, downsampled_neg_indices])
+    X_balanced = X.loc[balanced_indices]
+    y_balanced = y.loc[balanced_indices]
+    print(f"Balanced distribution for UMAP - Positive: {len(pos_indices)}, Negative: {len(pos_indices)}")
+
+    X= X_balanced
+    y= y_balanced
 
     X_encoded = pd.get_dummies(X, drop_first=True).astype(float)
 
     # FIX FOR SPECTRAL WARNING: Add microscopic uniform noise (jitter)
     # This breaks the identical rows just enough for the mathematical solvers to pass
-    np.random.seed(random_state)
     noise = np.random.uniform(0, 1e-5, X_encoded.shape)
     X_encoded += noise
 
@@ -41,13 +58,10 @@ def plot_umap(df, target, n_neighbours, min_dist, random_state=24):
     label_map = {0: 'Negative', 1: 'Positive', '0': 'Negative', '1': 'Positive'}
     y_mapped = y.map(label_map).fillna(y)
 
-
-    # Plot coordinates
     plt.figure(figsize=(10, 8))
     sns.scatterplot(
         x=umap_results[:, 0], y=umap_results[:, 1],
         hue=y_mapped,
-        palette={'Negative': 'steelblue', 'Positive': 'crimson'},
         alpha=0.6,
         style=y_mapped)
     plt.title('UMAP Projection of Feature Space (Jaccard)', fontsize=14, weight='bold', pad=15)
@@ -178,45 +192,6 @@ def hyper_parameter_tuning(X_train, y_train,estimator):
     print(f"Best Cross-Validation '{scoring}' score: {grid_search.best_score_:.4f}")
     return grid_search
 
-
-
-
-    # THIS FUNCTION IS DIRECTLY FROM GOOGLE AI
-import numpy as np
-from sklearn.metrics import precision_recall_curve
-def get_optimal_threshold(model, X_val, y_val):
-    """
-    Finds the decision threshold that maximizes the F1-score
-    using the precision-recall curve on validation data.
-    """
-    # 1. Get predicted probabilities for the positive class
-    y_proba = model.predict_proba(X_val)[:, 1]
-
-    # 2. Calculate precisions, recalls, and thresholds
-    precisions, recalls, thresholds = precision_recall_curve(y_val, y_proba)
-
-    # 3. Calculate F1-scores for each threshold point
-    # Add a tiny epsilon (1e-10) to prevent division by zero errors
-    f1_scores = 2 * (precisions * recalls) / (precisions + recalls + 1e-10)
-
-    # 4. Find the index of the highest F1-score
-    best_idx = np.argmax(f1_scores)
-
-    # precision_recall_curve returns one more value for precision/recall than thresholds,
-    # so we handle the edge case where the best index lands on the last element.
-    if best_idx >= len(thresholds):
-        best_threshold = 0.5  # Fallback to default if out of bounds
-    else:
-        best_threshold = thresholds[best_idx]
-
-    print(f"--- Threshold Tuning Optimization ---")
-    print(f"Optimal Threshold: {best_threshold:.4f}")
-    print(f"Expected Val Precision: {precisions[best_idx]:.4f}")
-    print(f"Expected Val Recall: {recalls[best_idx]:.4f}")
-    print(f"Expected Val F1-Score: {f1_scores[best_idx]:.4f}\n")
-
-    return best_threshold
-
 # read in data
 df = pd.read_csv(f"data/{input_csv}", low_memory=False)
 
@@ -252,8 +227,11 @@ X = df.drop(columns=['corona_result'])
 y = df['corona_result']
 
 print('====== Unsupervised clustering ======')
-plot_umap(df=df, target='corona_result', n_neighbours=15, min_dist=0.1)
+#plot_umap(df=df, target='corona_result', features=['cough', 'test_indication', 'age_60_and_above', 'gender'], n_neighbours=100, min_dist=0.3)
 
+visualize_binary_profiles(X, y)
+
+print_top_positivity_profiles(X,y)
 
 y_neg = y.value_counts()[0]
 y_pos = y.value_counts()[1]
