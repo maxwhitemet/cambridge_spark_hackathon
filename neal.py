@@ -6,9 +6,56 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay, roc_auc_score, roc_curve
 import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+import umap
 
 input_csv = "corona_tested_individuals_ver_006.csv"
 pickle_file = "models/HistGradientBoostingClassifierModel.pkl"
+
+def plot_umap(df, target, n_neighbours, min_dist, random_state=24):
+    print(f"\n=== Preparing t-SNE Projection with target {target}===")
+
+    df_clean = df.dropna().copy()
+
+    X = df_clean.drop(columns=[target])
+    y = df_clean[target]
+
+    X_encoded = pd.get_dummies(X, drop_first=True).astype(float)
+
+    # FIX FOR SPECTRAL WARNING: Add microscopic uniform noise (jitter)
+    # This breaks the identical rows just enough for the mathematical solvers to pass
+    np.random.seed(random_state)
+    noise = np.random.uniform(0, 1e-5, X_encoded.shape)
+    X_encoded += noise
+
+    print("Running UMAP manifold learning (Jaccard metric)...")
+    reducer = umap.UMAP(
+        n_neighbors=n_neighbours,
+        min_dist=min_dist,
+        metric='jaccard',
+        init='random',
+        n_jobs=-1
+    )
+
+    umap_results = reducer.fit_transform(X_encoded)
+    label_map = {0: 'Negative', 1: 'Positive', '0': 'Negative', '1': 'Positive'}
+    y_mapped = y.map(label_map).fillna(y)
+
+
+    # Plot coordinates
+    plt.figure(figsize=(10, 8))
+    sns.scatterplot(
+        x=umap_results[:, 0], y=umap_results[:, 1],
+        hue=y_mapped,
+        palette={'Negative': 'steelblue', 'Positive': 'crimson'},
+        alpha=0.6,
+        style=y_mapped)
+    plt.title('UMAP Projection of Feature Space (Jaccard)', fontsize=14, weight='bold', pad=15)
+    plt.xlabel('UMAP Dimension 1')
+    plt.ylabel('UMAP Dimension 2')
+    plt.legend(title='Corona Result')
+    plt.tight_layout()
+    plt.show()
 
 def assess_model(model, name, X, y, threshold=0.5):
     name = f'{name}_threshold={threshold:.2f}'
@@ -197,11 +244,16 @@ df = df.drop(columns=['test_date'])
 print('====== After cleaning ======')
 print(df.info())
 
-print('====== Feature spread ======')
-plot_features_grouped_by_target(df)
+#print('====== Feature spread ======')
+#plot_features_grouped_by_target(df)
+
 
 X = df.drop(columns=['corona_result'])
 y = df['corona_result']
+
+print('====== Unsupervised clustering ======')
+plot_umap(df=df, target='corona_result', n_neighbours=15, min_dist=0.1)
+
 
 y_neg = y.value_counts()[0]
 y_pos = y.value_counts()[1]
