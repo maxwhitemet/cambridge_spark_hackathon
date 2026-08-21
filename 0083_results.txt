@@ -1,0 +1,84 @@
+=== Grid Search Complete ===
+Best Parameters: {'min_samples_leaf': 50, 'max_leaf_nodes': 15, 'max_iter': 100, 'max_depth': 3, 'learning_rate': 0.1, 'class_weight': {0: 1, 1: 4}}
+Best Cross-Validation 'f1' score: 0.6108
+--- Threshold Tuning Optimization ---
+Optimal Threshold: 0.6365
+Expected Val Precision: 0.6116
+Expected Val Recall: 0.6026
+Expected Val F1-Score: 0.6070
+
+============= ASSESS: best_gb_classifier_train_threshold=0.64 ============
+calculate y_pred for best_gb_classifier_train_threshold=0.64
+=== Classification Report for best_gb_classifier_train_threshold=0.64===
+              precision    recall  f1-score   support
+
+    negative       0.97      0.97      0.97   1984322
+    positive       0.61      0.61      0.61    176780
+
+    accuracy                           0.94   2161102
+   macro avg       0.79      0.79      0.79   2161102
+weighted avg       0.94      0.94      0.94   2161102
+
+=== Confusion Matrix best_gb_classifier_train_threshold=0.64===
+True Negatives  (Correctly negative):          96.59 %
+False Positives (Healthy flagged as positive): 3.41 %
+False Negatives (Missed positive):             39.12 %
+True Positives  (Correctly positive):          60.88 %
+ROC AUC Score best_gb_classifier_train_threshold=0.64: 0.8424
+============= ASSESS: best_gb_classifier_test_threshold=0.64 ============
+calculate y_pred for best_gb_classifier_test_threshold=0.64
+=== Classification Report for best_gb_classifier_test_threshold=0.64===
+              precision    recall  f1-score   support
+
+    negative       0.97      0.97      0.97    396864
+    positive       0.61      0.61      0.61     35356
+
+    accuracy                           0.94    432220
+   macro avg       0.79      0.79      0.79    432220
+weighted avg       0.94      0.94      0.94    432220
+
+=== Confusion Matrix best_gb_classifier_test_threshold=0.64===
+True Negatives  (Correctly negative):          96.61 %
+False Positives (Healthy flagged as positive): 3.39 %
+False Negatives (Missed positive):             39.31 %
+True Positives  (Correctly positive):          60.69 %
+ROC AUC Score best_gb_classifier_test_threshold=0.64: 0.8426
+============= ASSESS: best_gb_classifier_test_threshold=0.30 ============
+calculate y_pred for best_gb_classifier_test_threshold=0.30
+=== Classification Report for best_gb_classifier_test_threshold=0.30===
+              precision    recall  f1-score   support
+
+    negative       0.97      0.95      0.96    396864
+    positive       0.56      0.64      0.60     35356
+
+    accuracy                           0.93    432220
+   macro avg       0.76      0.80      0.78    432220
+weighted avg       0.93      0.93      0.93    432220
+
+=== Confusion Matrix best_gb_classifier_test_threshold=0.30===
+True Negatives  (Correctly negative):          95.49 %
+False Positives (Healthy flagged as positive): 4.51 %
+False Negatives (Missed positive):             35.80 %
+True Positives  (Correctly positive):          64.20 %
+ROC AUC Score best_gb_classifier_test_threshold=0.30: 0.8426
+============= ASSESS: best_gb_classifier_test_threshold=0.60 ============
+calculate y_pred for best_gb_classifier_test_threshold=0.60
+=== Classification Report for best_gb_classifier_test_threshold=0.60===
+              precision    recall  f1-score   support
+
+    negative       0.97      0.96      0.96    396864
+    positive       0.60      0.62      0.61     35356
+
+    accuracy                           0.94    432220
+   macro avg       0.78      0.79      0.79    432220
+weighted avg       0.94      0.94      0.94    432220
+
+=== Confusion Matrix best_gb_classifier_test_threshold=0.60===
+True Negatives  (Correctly negative):          96.41 %
+False Positives (Healthy flagged as positive): 3.59 %
+False Negatives (Missed positive):             38.47 %
+True Positives  (Correctly positive):          61.53 %
+ROC AUC Score best_gb_classifier_test_threshold=0.60: 0.8426
+Model pickled to models/HistGradientBoostingClassifierModel_0083.pkl successfully
+
+Process finished with exit code 0
