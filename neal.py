@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report, confusion_matrix, ConfusionMa
 import matplotlib.pyplot as plt
 
 input_csv = "corona_tested_individuals_ver_006.csv"
-pickle_file = "models/HistGradientBoostingClassifierModel_small.pkl"
+pickle_file = "models/HistGradientBoostingClassifierModel.pkl"
 
 def assess_model(model, name, X, y, threshold=0.5):
     name = f'{name}_threshold={threshold:.2f}'
